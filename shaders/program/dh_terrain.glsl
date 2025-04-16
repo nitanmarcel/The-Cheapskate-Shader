@@ -1,9 +1,13 @@
 
 #version 330 compatibility
 
+varying vec4 pos;
+varying vec3 normal;
+
 #ifdef VERTEX_SHADER
 
-varying vec4 pos;
+
+uniform mat4 gbufferModelViewInverse;
 
 out vec2 lmcoord;
 out vec2 texcoord;
@@ -16,17 +20,19 @@ void main() {
 	glcolor = gl_Color;
 
     pos = gl_ModelViewMatrix * gl_Vertex;
+
+	normal = gl_NormalMatrix * gl_Normal;
+	normal = mat3(gbufferModelViewInverse) * normal;	
 }
 #endif // VERTEX_SHADER
 
 #ifdef FRAGMENT_SHADER
 
-varying vec4 pos;
-
 uniform sampler2D lightmap;
 uniform sampler2D gtexture;
 uniform sampler2D noisetex;
 uniform mat4 gbufferModelViewInverse;
+uniform vec3 shadowLightPosition;
 uniform vec3 cameraPosition;
 uniform float alphaTestRef = 0.1;
 
@@ -43,14 +49,17 @@ void main() {
 		discard;
 	}
 
-    vec3 worldPos = mat3(gbufferModelViewInverse) * pos.xyz + cameraPosition;
+	vec3 shadowLightDirection = normalize(mat3(gbufferModelViewInverse) * shadowLightPosition);
+	float lightBrightness = clamp(dot(shadowLightDirection, normal), 0.2,1.0);
+	color *= lightBrightness;
+    
+	vec3 worldPos = mat3(gbufferModelViewInverse) * pos.xyz + cameraPosition;
     vec3 noisePos = mod(worldPos * 4.0, 64.0);
-
-    vec4 albedo = color;
+    
+	vec4 albedo = color;
 
     albedo.rgb *= mix(0.95, 1.05, texelFetch(noisetex, ivec2(noisePos.xy), 0).r);
 
-    gl_FragData[0] = albedo;
-    
+    gl_FragData[0] = albedo;    
 }
 #endif // FRAGMENT_SHADER
