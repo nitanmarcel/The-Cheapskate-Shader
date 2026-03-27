@@ -39,6 +39,7 @@ void main() {
 
 		float bloomStrength = BLOOM_STRENGTH * 0.08;
 		color.rgb = mix(color.rgb, blur, bloomStrength);
+		color.rgb = color.rgb * EXPOSURE;
 	#endif // BLOOM
 }
 #endif // FRAGMENT_SHADER
