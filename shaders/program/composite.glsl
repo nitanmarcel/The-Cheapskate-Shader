@@ -41,11 +41,12 @@ void main() {
 		float bloomStrength = BLOOM_STRENGTH * 0.08;
 		color.rgb = mix(color.rgb, blur, bloomStrength);
 
-		vec3 hsv = rgb2hsv(color.rgb);
-		hsv.y *= SATURATION;
-		color.rgb = hsv2rgb(hsv);
-
-		color.rgb = color.rgb * EXPOSURE;
 	#endif // BLOOM
+	
+	vec3 hsv = rgb2hsv(color.rgb);
+	hsv.y *= SATURATION;
+	color.rgb = hsv2rgb(hsv);
+
+	color.rgb = color.rgb * EXPOSURE;
 }
 #endif // FRAGMENT_SHADER
