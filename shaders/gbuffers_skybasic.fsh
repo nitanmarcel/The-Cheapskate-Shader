@@ -1,5 +1,6 @@
 #version 330 compatibility
 
+
 uniform int renderStage;
 uniform float viewHeight;
 uniform float viewWidth;
