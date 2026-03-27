@@ -3,11 +3,9 @@
 #include "/lib/utils.glsl"
 #include "/lib/settings.glsl"
 
+varying vec2 texcoord;
+
 #ifdef VERTEX_SHADER
-
-out vec2 texcoord;
-
-
 
 void main() {
 	gl_Position = ftransform();
@@ -19,7 +17,9 @@ void main() {
 uniform sampler2D colortex0;
 uniform sampler2D colortex1;
 
-in vec2 texcoord;
+uniform float viewWidth;
+uniform float viewHeight;
+
 /* RENDERTARGETS: 0 */
 layout(location = 0) out vec4 color;
 
@@ -27,21 +27,24 @@ void main() {
 	color = texture(colortex0, texcoord);
 
 	#ifdef BLOOM
-		vec3 blur = texture2D(colortex1, texcoord / 4.0).rgb;
-		blur = clamp(blur, vec3(0.0), vec3(1.0));
-		blur *= blur;
+		vec3 bloomSource = texture(colortex0, texcoord).rgb;
 
-		float luminance = dot(blur, vec3(0.2126, 0.7152, 0.0722));
-		float threshold = 0.7;
-		float softThreshold = 0.1;
+		float luminance = dot(bloomSource, vec3(0.2126, 0.7152, 0.0722));
+		float threshold = 0.85; 
+		vec3 brightParts = bloomSource * smoothstep(threshold, threshold + 0.1, luminance);
 
-		float brightness = smoothstep(threshold - softThreshold, threshold + softThreshold, luminance);
-		blur *= brightness;
+		vec3 blur = vec3(0.0);
+		float blurScale = 1.5;
+		vec2 res = vec2(viewWidth, viewHeight);
 
-		float bloomStrength = BLOOM_STRENGTH * 0.08;
-		color.rgb = mix(color.rgb, blur, bloomStrength);
+		blur += brightParts * 0.22;
+		blur += texture(colortex0, texcoord + vec2(1.33 * blurScale / res.x, 0.0)).rgb * 0.35;
+		blur += texture(colortex0, texcoord - vec2(1.33 * blurScale / res.x, 0.0)).rgb * 0.35;
+		blur += texture(colortex0, texcoord + vec2(0.0, 1.33 * blurScale / res.y)).rgb * 0.35;
+		blur += texture(colortex0, texcoord - vec2(0.0, 1.33 * blurScale / res.y)).rgb * 0.35;
 
-	#endif // BLOOM
+		color.rgb += (blur * BLOOM_STRENGTH); 
+	#endif
 	
 	vec3 hsv = rgb2hsv(color.rgb);
 	hsv.y *= SATURATION;
