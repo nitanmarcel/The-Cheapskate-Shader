@@ -1,2 +1,2 @@
 #define VERTEX_SHADER
-#include "/program/composite.glsl"
+#include "/program/deferred.glsl"

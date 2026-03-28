@@ -1,2 +1,2 @@
 #define FRAGMENT_SHADER
-#include "/program/composite.glsl"
+#include "/program/deferred.glsl"
